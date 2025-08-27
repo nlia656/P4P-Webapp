@@ -3,11 +3,10 @@ import './SAMPopup.css'
 import ReactDOM from 'react-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import valenceSAM from '../assets/SAMValence.png';
+import arousalSAM from '../assets/SAMArousal.png';
 
 function SAMPopup({open, onClose}) {
-
-
-
 
     if(!open){
         return null;
@@ -22,6 +21,27 @@ function SAMPopup({open, onClose}) {
                         <FontAwesomeIcon icon={faXmark} size="lg" />
                     </div>
                 </nav>
+                <div className='scales'>
+                    <div className="valence-scale">
+                        <img src={valenceSAM}></img>
+                        <div className="radio-buttons">
+                            <input type="radio" name="valence" value="1"></input>
+                            <input type="radio" name="valence" value="2"></input>
+                            <input type="radio" name="valence" value="3"></input>
+                            <input type="radio" name="valence" value="4"></input>
+                        </div>
+                    </div>
+                    <div className="arousal-scale">
+                        <img src={arousalSAM}></img>
+                        <div className="radio-buttons">
+                            <input type="radio" name="arousal" value="1"></input>
+                            <input type="radio" name="arousal" value="2"></input>
+                            <input type="radio" name="arousal" value="3"></input>
+                            <input type="radio" name="arousal" value="4"></input>
+                        </div>
+                    </div>
+                </div>
+                <button>Next</button>
             </div>
         </>,
         document.getElementById("portal")
