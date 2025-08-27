@@ -3,6 +3,7 @@ import { useStudy } from './context/StudyContext';
 import YouTubePlayer from './components/YouTubePlayer';
 import SAMPopup from './SAMScale/SAMPopup';
 import './App.css';
+import { useLocation, useNavigate } from "react-router-dom";
 
 function Player() {
   const studyContext = useStudy();
@@ -26,6 +27,10 @@ function Player() {
   const [debugInfo, setDebugInfo] = useState('');
   const playerRef = useRef(null);
 
+  const location = useLocation();
+  const links = location.state?.links || [];
+  const [videoIndex, setVideoIndex] = useState(0);
+
   // Sample video for testing (this will be replaced with actual video management)
   const sampleVideo = {
     id: '983bBbJx0Mk',
@@ -37,10 +42,11 @@ function Player() {
   // Initialize video when component mounts
   useEffect(() => {
     if (!currentVideo && setCurrentVideo) {
-      setCurrentVideo(sampleVideo);
+      setCurrentVideo(links[videoIndex] || null);
     }
   }, [currentVideo, setCurrentVideo]);
 
+  console.log(currentVideo);
   // Handle video time updates
   const handleTimeUpdate = (time) => {
     setVideoTime(time || 0);

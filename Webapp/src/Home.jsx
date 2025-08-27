@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useStudy } from './context/StudyContext';
 import './App.css';
+import videoList from "./videos/videos.json";
 
 function Home() {
   const navigate = useNavigate();
@@ -41,7 +42,10 @@ function Home() {
 
       console.log('Navigating to player...');
       // Navigate to player
-      navigate("/player");
+      navigate("/player", {
+            state:{
+                links: videoList,
+        }});
     } catch (error) {
       console.error('Error starting study:', error);
       alert('Error starting study. Please try again.');
