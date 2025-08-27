@@ -16,11 +16,6 @@ function SAMPopup({open, onClose}) {
         <>
             <div className="overlay"></div>
             <div className="modal">
-                <nav className="close-button">
-                    <div className="circle-button" onClick={onClose}>
-                        <FontAwesomeIcon icon={faXmark} size="lg" />
-                    </div>
-                </nav>
                 <div className='scales'>
                     <div className="valence-scale">
                         <img src={valenceSAM}></img>
@@ -41,7 +36,7 @@ function SAMPopup({open, onClose}) {
                         </div>
                     </div>
                 </div>
-                <button>Next</button>
+                <button onClick={onClose}>Next</button>
             </div>
         </>,
         document.getElementById("portal")

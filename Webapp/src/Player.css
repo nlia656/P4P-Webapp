@@ -1,0 +1,12 @@
+.video-player{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    align-items: center;
+
+}
+
+button{
+    width:100px;
+}
