@@ -1,21 +1,24 @@
-import { useState } from 'react'
-import SAMPopup from './SAMScale/SAMPopup';
-import './App.css'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Player from './Player';
+import { StudyProvider } from './context/StudyContext';
 import Home from './Home';
+import Player from './Player';
+import './App.css';
 
 function App() {
-  const [isOpen, setIsOpen] = useState(false);
-
+  console.log('App component rendering');
+  
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />}></Route>
-        <Route path="/player" element={<Player />} />
-      </Routes>
-    </BrowserRouter>
-  )
+    <StudyProvider>
+      <BrowserRouter>
+        <div className="app">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/player" element={<Player />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </StudyProvider>
+  );
 }
 
-export default App
+export default App;
