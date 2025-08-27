@@ -19,7 +19,7 @@
     border-width: 10px;
     border-radius: 10px;
     width: 1000px;
-    height: 500px;
+    height: 650px;
   }
 
   nav .circle-button{
@@ -45,4 +45,21 @@
     position: fixed;
     top: 5%;
     right: 5%;
+  }
+
+  .radio-buttons{
+    display: flex;
+    justify-content: space-evenly;
+  }
+
+  .scales{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .valence-scale, .arousal-scale{
+    display: flex;
+    flex-direction: column;
   }
