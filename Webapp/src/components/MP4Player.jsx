@@ -67,6 +67,7 @@ const MP4Player = forwardRef(
   };
 
   const pauseVideo = () => {
+    console.log("mp4 pause");
     const video = videoRef.current;
     if (video) {
       video.pause();

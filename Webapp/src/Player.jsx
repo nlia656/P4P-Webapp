@@ -50,7 +50,6 @@ function Player() {
     }
   }, [currentVideo, setCurrentVideo]);
 
-  console.log(currentVideo);
   // Handle video time updates
   const handleTimeUpdate = (time) => {
     setVideoTime(time || 0);
@@ -91,9 +90,11 @@ function Player() {
     setDebugInfo('Attempting to pause video for rating');
     
     try {
-      if (playerRef.current && playerRef.current.player) {
+      // && playerRef.current.player
+      if (playerRef.current) {
         console.log('Player ref available, pausing video');
-        playerRef.current.player.pauseVideo();
+        //playerRef.current.player.pauseVideo();
+        playerRef.current.pauseVideo();
         setPaused(true);
         setShowPauseMessage(true);
         setIsSAMOpen(true);
@@ -126,9 +127,10 @@ function Player() {
     setShowPauseMessage(false);
     
     // Resume video after rating
-    if (playerRef.current && playerRef.current.player) {
+    if (playerRef.current) {
       setTimeout(() => {
-        playerRef.current.player.playVideo();
+        //playerRef.current.player.playVideo();
+        playerRef.current.playVideo();
         setPaused(false);
         setDebugInfo('Video resumed after rating');
       }, 1000); // Small delay to show completion
@@ -138,13 +140,15 @@ function Player() {
   // Handle manual pause/resume
   const handlePauseResume = () => {
     try {
-      if (playerRef.current && playerRef.current.player) {
+      if (playerRef.current) {
         if (isPaused) {
-          playerRef.current.player.playVideo();
+          //playerRef.current.player.playVideo();
+          playerRef.current.playVideo();
           setPaused(false);
           setDebugInfo('Video resumed manually');
         } else {
-          playerRef.current.player.pauseVideo();
+          //playerRef.current.player.pauseVideo();
+          playerRef.current.pauseVideo();
           setPaused(true);
           setDebugInfo('Video paused manually');
         }
@@ -210,24 +214,24 @@ function Player() {
 
       <div className="video-section">
         {currentVideo && (
-          // <YouTubePlayer
-          //   ref={playerRef}
-          //   videoId={currentVideo.id}
-          //   onVideoEnd={handleVideoEnd}
-          //   onVideoPause={handleVideoPause}
-          //   onVideoPlay={handleVideoPlay}
-          //   onTimeUpdate={handleTimeUpdate}
-          //   isPaused={isPaused}
-          // />
-           <MP4Player
+          <YouTubePlayer
             ref={playerRef}
-            videoSrc={mp4test}
+            videoId={currentVideo.id}
             onVideoEnd={handleVideoEnd}
             onVideoPause={handleVideoPause}
             onVideoPlay={handleVideoPlay}
             onTimeUpdate={handleTimeUpdate}
             isPaused={isPaused}
           />
+          //  <MP4Player
+          //   ref={playerRef}
+          //   videoSrc={mp4test}
+          //   onVideoEnd={handleVideoEnd}
+          //   onVideoPause={handleVideoPause}
+          //   onVideoPlay={handleVideoPlay}
+          //   onTimeUpdate={handleTimeUpdate}
+          //   isPaused={isPaused}
+          // />
         )}
       </div>
 

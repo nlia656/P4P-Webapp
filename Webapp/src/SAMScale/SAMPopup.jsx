@@ -12,15 +12,15 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
 
   useEffect(() => {
     setMounted(true);
-    console.log('SAMPopup mounted, open state:', open);
+    //console.log('SAMPopup mounted, open state:', open);
   }, []);
 
   useEffect(() => {
-    console.log('SAMPopup open state changed to:', open);
+    //console.log('SAMPopup open state changed to:', open);
   }, [open]);
 
   if (!open || !mounted) {
-    console.log('SAMPopup not rendering - open:', open, 'mounted:', mounted);
+    //console.log('SAMPopup not rendering - open:', open, 'mounted:', mounted);
     return null;
   }
 

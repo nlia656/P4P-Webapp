@@ -85,7 +85,7 @@ const StudyContext = createContext();
 export const StudyProvider = ({ children }) => {
   const [state, dispatch] = useReducer(studyReducer, initialState);
 
-  console.log('StudyProvider rendering with state:', state);
+  //console.log('StudyProvider rendering with state:', state);
 
   // Check storage availability on mount
   useEffect(() => {
@@ -204,7 +204,7 @@ export const StudyProvider = ({ children }) => {
     ...actions
   };
 
-  console.log('StudyProvider: Providing context value:', contextValue);
+  //console.log('StudyProvider: Providing context value:', contextValue);
 
   return (
     <StudyContext.Provider value={contextValue}>
