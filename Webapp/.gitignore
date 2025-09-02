@@ -38,3 +38,5 @@ node_modules/
 .env.example
 .env
 .taskmaster
+
+*.mp4

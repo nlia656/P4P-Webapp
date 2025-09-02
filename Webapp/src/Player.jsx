@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStudy } from './context/StudyContext';
 import YouTubePlayer from './components/YouTubePlayer';
+import MP4Player from './components/MP4Player';
 import SAMPopup from './SAMScale/SAMPopup';
 import './App.css';
 import { useLocation, useNavigate } from "react-router-dom";
+
+//temp mp4
+import mp4test from './videos/HVHA2.mp4';
 
 function Player() {
   const studyContext = useStudy();
@@ -206,9 +210,18 @@ function Player() {
 
       <div className="video-section">
         {currentVideo && (
-          <YouTubePlayer
+          // <YouTubePlayer
+          //   ref={playerRef}
+          //   videoId={currentVideo.id}
+          //   onVideoEnd={handleVideoEnd}
+          //   onVideoPause={handleVideoPause}
+          //   onVideoPlay={handleVideoPlay}
+          //   onTimeUpdate={handleTimeUpdate}
+          //   isPaused={isPaused}
+          // />
+           <MP4Player
             ref={playerRef}
-            videoId={currentVideo.id}
+            videoSrc={mp4test}
             onVideoEnd={handleVideoEnd}
             onVideoPause={handleVideoPause}
             onVideoPlay={handleVideoPlay}
