@@ -35,13 +35,6 @@ function Player() {
   const links = location.state?.links || [];
   const [videoIndex, setVideoIndex] = useState(0);
 
-  // Sample video for testing (this will be replaced with actual video management)
-  const sampleVideo = {
-    id: '983bBbJx0Mk',
-    title: 'Sample Video',
-    duration: 180, // 3 minutes for testing
-    quadrant: 'high-valence-high-arousal'
-  };
 
   // Initialize video when component mounts
   useEffect(() => {
@@ -69,6 +62,12 @@ function Player() {
     console.log('Video ended');
     setDebugInfo('Video ended');
     // TODO: Move to next video or end study
+    setVideoIndex(videoIndex+1);
+    setCurrentVideo(links[videoIndex] || null);
+    if (currentVideo == null){
+      setVideoIndex(0);
+      setCurrentVideo(links[videoIndex] || null);
+    }
   };
 
   // Handle video pause
@@ -214,24 +213,27 @@ function Player() {
 
       <div className="video-section">
         {currentVideo && (
-          <YouTubePlayer
-            ref={playerRef}
-            videoId={currentVideo.id}
-            onVideoEnd={handleVideoEnd}
-            onVideoPause={handleVideoPause}
-            onVideoPlay={handleVideoPlay}
-            onTimeUpdate={handleTimeUpdate}
-            isPaused={isPaused}
-          />
-          //  <MP4Player
-          //   ref={playerRef}
-          //   videoSrc={mp4test}
-          //   onVideoEnd={handleVideoEnd}
-          //   onVideoPause={handleVideoPause}
-          //   onVideoPlay={handleVideoPlay}
-          //   onTimeUpdate={handleTimeUpdate}
-          //   isPaused={isPaused}
-          // />
+          currentVideo.type === "youtube" ? (
+            <YouTubePlayer
+              ref={playerRef}
+              videoId={currentVideo.id}
+              onVideoEnd={handleVideoEnd}
+              onVideoPause={handleVideoPause}
+              onVideoPlay={handleVideoPlay}
+              onTimeUpdate={handleTimeUpdate}
+              isPaused={isPaused}
+            />
+          ) : currentVideo.type === "mp4" ? (
+              <MP4Player
+              ref={playerRef}
+              videoSrc={mp4test}
+              onVideoEnd={handleVideoEnd}
+              onVideoPause={handleVideoPause}
+              onVideoPlay={handleVideoPlay}
+              onTimeUpdate={handleTimeUpdate}
+              isPaused={isPaused}
+            />
+          ) : null
         )}
       </div>
 

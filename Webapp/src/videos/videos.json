@@ -2,11 +2,19 @@
     {
         "name": "Soda Pop",
         "id": "983bBbJx0Mk",
-        "quadrant": "11"
+        "quadrant": "HVHA",
+        "type": "youtube"
     },
     {
         "name": "Five Little Ducks",
         "id": "pZw9veQ76fo",
-        "quadrant": "01"
+        "quadrant": "LVHA",
+        "type": "youtube"
+    },
+    {
+        "name": "HAHV2",
+        "id": "./videos/HVHA2.mp4",
+        "quadrant": "HVHA",
+        "type": "mp4"
     }
 ]
