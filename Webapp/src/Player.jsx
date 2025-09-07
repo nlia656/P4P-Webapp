@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStudy } from './context/StudyContext';
+import { exportAllData } from './utils/localStorage';
 import YouTubePlayer from './components/YouTubePlayer';
 import SAMPopup from './SAMScale/SAMPopup';
 import './App.css';
-import { useLocation, useNavigate } from "react-router-dom";
 
 function Player() {
   const studyContext = useStudy();
@@ -18,35 +18,41 @@ function Player() {
     setCurrentVideo = () => {}, 
     setVideoTime = () => {}, 
     setPaused = () => {},
-    setStudyPhase = () => {} 
+    setStudyPhase = () => {},
+    recordRating = () => {}
   } = studyContext || {};
 
   const [isSAMOpen, setIsSAMOpen] = useState(false);
   const [showPauseMessage, setShowPauseMessage] = useState(false);
   const [lastRatingTime, setLastRatingTime] = useState(0);
   const [debugInfo, setDebugInfo] = useState('');
+  const [duration, setDuration] = useState(0);
+  const [playlist, setPlaylist] = useState([
+    { id: '983bBbJx0Mk', title: 'Sample Video 1' },
+    { id: 'dQw4w9WgXcQ', title: 'Sample Video 2' }
+  ]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const playerRef = useRef(null);
 
-  const location = useLocation();
-  const links = location.state?.links || [];
-  const [videoIndex, setVideoIndex] = useState(0);
-
-  // Sample video for testing (this will be replaced with actual video management)
-  const sampleVideo = {
-    id: '983bBbJx0Mk',
-    title: 'Sample Video',
-    duration: 180, // 3 minutes for testing
-    quadrant: 'high-valence-high-arousal'
-  };
-
-  // Initialize video when component mounts
+  // Initialize video when component mounts or when playlist changes
   useEffect(() => {
-    if (!currentVideo && setCurrentVideo) {
-      setCurrentVideo(links[videoIndex] || null);
+    if (!currentVideo && setCurrentVideo && playlist.length > 0) {
+      setCurrentVideo(playlist[currentIndex]);
     }
-  }, [currentVideo, setCurrentVideo]);
+  }, [currentVideo, setCurrentVideo, playlist, currentIndex]);
 
-  console.log(currentVideo);
+  // Update current video when index changes
+  useEffect(() => {
+    if (setCurrentVideo && playlist[currentIndex]) {
+      setCurrentVideo(playlist[currentIndex]);
+      setVideoTime(0);
+      setLastRatingTime(0);
+      setShowPauseMessage(false);
+      setIsSAMOpen(false);
+    }
+  }, [currentIndex]);
+
   // Handle video time updates
   const handleTimeUpdate = (time) => {
     setVideoTime(time || 0);
@@ -54,69 +60,68 @@ function Player() {
     // Check if it's time to pause for rating (every 60 seconds)
     // Only trigger if we haven't already rated at this time
     if (Math.floor(time || 0) > 0 && Math.floor(time || 0) % 60 === 0 && Math.floor(time || 0) !== lastRatingTime) {
-      console.log('Time to rate emotions at:', Math.floor(time || 0), 'seconds');
       setDebugInfo(`Auto-triggering rating at ${Math.floor(time || 0)}s`);
       handlePauseForRating();
       setLastRatingTime(Math.floor(time || 0));
     }
   };
 
+  // Duration callback from player
+  const handleDuration = (d) => {
+    setDuration(d || 0);
+  };
+
   // Handle video end
   const handleVideoEnd = () => {
-    console.log('Video ended');
     setDebugInfo('Video ended');
-    // TODO: Move to next video or end study
+    handleNext();
   };
 
   // Handle video pause
   const handleVideoPause = () => {
-    console.log('Video paused');
     setDebugInfo('Video paused');
   };
 
   // Handle video play
   const handleVideoPlay = () => {
-    console.log('Video playing');
     setDebugInfo('Video playing');
     setShowPauseMessage(false);
   };
 
   // Pause video for rating
   const handlePauseForRating = () => {
-    console.log('Pausing video for rating');
     setDebugInfo('Attempting to pause video for rating');
     
     try {
       if (playerRef.current && playerRef.current.player) {
-        console.log('Player ref available, pausing video');
         playerRef.current.player.pauseVideo();
         setPaused(true);
         setShowPauseMessage(true);
         setIsSAMOpen(true);
         setDebugInfo('Video paused, SAM popup opened');
       } else {
-        console.error('Player reference not available');
         setDebugInfo('Player reference not available');
       }
     } catch (error) {
-      console.error('Error pausing video:', error);
       setDebugInfo(`Error pausing video: ${error.message}`);
     }
   };
 
   // Handle SAM rating completion
   const handleSAMComplete = (valenceRating, arousalRating) => {
-    console.log('SAM Rating completed:', { 
-      valence: valenceRating, 
-      arousal: arousalRating, 
-      time: videoTime,
-      timestamp: new Date().toISOString()
-    });
-    
     setDebugInfo(`Rating completed: V${valenceRating}, A${arousalRating}`);
-    
-    // TODO: Save rating data to session
-    // TODO: Resume video or move to next phase
+
+    // Persist rating against current session
+    try {
+      recordRating({
+        videoId: currentVideo?.id || '',
+        videoTimeSec: Math.floor(videoTime || 0),
+        valence: valenceRating,
+        arousal: arousalRating
+      });
+    } catch (e) {
+      console.error('recordRating failed:', e);
+    }
     
     setIsSAMOpen(false);
     setShowPauseMessage(false);
@@ -127,7 +132,7 @@ function Player() {
         playerRef.current.player.playVideo();
         setPaused(false);
         setDebugInfo('Video resumed after rating');
-      }, 1000); // Small delay to show completion
+      }, 500);
     }
   };
 
@@ -148,26 +153,23 @@ function Player() {
         setDebugInfo('Player reference not available for manual control');
       }
     } catch (error) {
-      console.error('Error in manual pause/resume:', error);
       setDebugInfo(`Error in manual control: ${error.message}`);
     }
   };
 
-  // Handle manual rating request
-  const handleManualRating = () => {
-    console.log('Manual rating requested');
-    setDebugInfo('Manual rating requested');
-    handlePauseForRating();
+  const handlePrev = () => {
+    setCurrentIndex((idx) => (idx > 0 ? idx - 1 : 0));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((idx) => (idx < playlist.length - 1 ? idx + 1 : idx));
   };
 
   // Handle SAM popup close
   const handleSAMClose = () => {
-    console.log('SAM popup closed');
-    setDebugInfo('SAM popup closed');
     setIsSAMOpen(false);
     setShowPauseMessage(false);
     
-    // Resume video if it was paused for rating
     if (isPaused && playerRef.current && playerRef.current.player) {
       playerRef.current.player.playVideo();
       setPaused(false);
@@ -177,7 +179,6 @@ function Player() {
 
   // Test function to manually open SAM popup
   const testSAMPopup = () => {
-    console.log('Testing SAM popup');
     setDebugInfo('Testing SAM popup');
     setIsSAMOpen(true);
     setShowPauseMessage(true);
@@ -193,6 +194,11 @@ function Player() {
       </div>
     );
   }
+
+  // Progress calculations
+  const safeDuration = duration || (playerRef.current?.getDuration?.() ?? 0) || 0;
+  const progress = safeDuration > 0 ? Math.min(100, Math.max(0, (videoTime / safeDuration) * 100)) : 0;
+  const remaining = Math.max(0, safeDuration - videoTime);
 
   return (
     <div className="player-container">
@@ -213,9 +219,21 @@ function Player() {
             onVideoPause={handleVideoPause}
             onVideoPlay={handleVideoPlay}
             onTimeUpdate={handleTimeUpdate}
+            onDuration={handleDuration}
             isPaused={isPaused}
           />
         )}
+      </div>
+
+      {/* Progress Bar */}
+      <div style={{ width: '100%', maxWidth: 800, margin: '0.75rem auto 1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#666' }}>
+          <span>Progress</span>
+          <span>{Math.floor(videoTime)}s / {Math.floor(safeDuration)}s · Remaining {Math.floor(remaining)}s</span>
+        </div>
+        <div style={{ height: 10, background: '#eee', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ width: `${progress}%`, height: '100%', background: '#667eea' }} />
+        </div>
       </div>
 
       <div className="player-controls">
@@ -228,9 +246,18 @@ function Player() {
         
         <button 
           className="control-button"
-          onClick={handleManualRating}
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
         >
-          Rate Emotions
+          Prev
+        </button>
+
+        <button 
+          className="control-button"
+          onClick={handleNext}
+          disabled={currentIndex >= playlist.length - 1}
+        >
+          Next
         </button>
 
         <button 
@@ -241,10 +268,19 @@ function Player() {
           Test SAM Popup
         </button>
 
+        <button 
+          className="control-button"
+          onClick={exportAllData}
+          style={{ backgroundColor: '#198754' }}
+        >
+          Export Data (JSON)
+        </button>
+
         <div className="video-info">
           <span>Current Time: {Math.floor(videoTime || 0)}s</span>
           <span>Video: {currentVideo?.title || 'No Video'}</span>
           <span>Status: {isPaused ? 'Paused' : 'Playing'}</span>
+          <span>Clip {currentIndex + 1}/{playlist.length}</span>
         </div>
       </div>
 
@@ -262,6 +298,7 @@ function Player() {
         <p>• Paused: {(isPaused || false).toString()}</p>
         <p>• Last Rating Time: {lastRatingTime || 0}s</p>
         <p>• Current Time: {Math.floor(videoTime || 0)}s</p>
+        <p>• Duration: {Math.floor(safeDuration)}s</p>
         <p>• Player Ref Available: {(playerRef.current !== null).toString()}</p>
         <p>• Player Instance Available: {String(Boolean(playerRef.current && playerRef.current.player))}</p>
         <p>• Participant: {participant ? 'Yes' : 'No'}</p>

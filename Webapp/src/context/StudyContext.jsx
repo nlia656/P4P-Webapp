@@ -6,7 +6,11 @@ import {
   getSessionData,
   saveStudyConfig,
   getStudyConfig,
-  isStorageAvailable
+  isStorageAvailable,
+  setCurrentParticipantId,
+  getCurrentParticipantId,
+  setCurrentSessionId,
+  getCurrentSessionId
 } from '../utils/localStorage';
 
 // Initial state
@@ -87,25 +91,43 @@ export const StudyProvider = ({ children }) => {
 
   console.log('StudyProvider rendering with state:', state);
 
-  // Check storage availability on mount
+  // Check storage availability on mount and rehydrate session/participant
   useEffect(() => {
-    const checkStorage = async () => {
+    const init = async () => {
       console.log('StudyProvider: Checking storage availability...');
       const available = isStorageAvailable();
       console.log('StudyProvider: Storage available:', available);
       dispatch({ type: STUDY_ACTIONS.SET_STORAGE_AVAILABLE, payload: available });
       
-      if (available) {
-        // Load existing study configuration
-        const config = getStudyConfig();
-        if (config) {
-          console.log('StudyProvider: Loaded existing config:', config);
-          dispatch({ type: STUDY_ACTIONS.SET_STUDY_CONFIG, payload: config });
+      if (!available) return;
+
+      // Load existing study configuration
+      const config = getStudyConfig();
+      if (config) {
+        console.log('StudyProvider: Loaded existing config:', config);
+        dispatch({ type: STUDY_ACTIONS.SET_STUDY_CONFIG, payload: config });
+      }
+
+      // Rehydrate participant and session if IDs exist
+      const pid = getCurrentParticipantId();
+      const sid = getCurrentSessionId();
+      if (pid) {
+        const p = getParticipantData(pid);
+        if (p) {
+          dispatch({ type: STUDY_ACTIONS.SET_PARTICIPANT, payload: p });
+          // If participant exists, move phase to video by default
+          dispatch({ type: STUDY_ACTIONS.SET_STUDY_PHASE, payload: 'video' });
+        }
+      }
+      if (sid) {
+        const s = getSessionData(sid);
+        if (s) {
+          dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: s });
         }
       }
     };
     
-    checkStorage();
+    init();
   }, []);
 
   // Actions
@@ -116,6 +138,7 @@ export const StudyProvider = ({ children }) => {
       dispatch({ type: STUDY_ACTIONS.SET_PARTICIPANT, payload: participant });
       if (state.isStorageAvailable && participant) {
         saveParticipantData(participant.id, participant);
+        setCurrentParticipantId(participant.id);
       }
     },
 
@@ -135,6 +158,7 @@ export const StudyProvider = ({ children }) => {
       
       if (state.isStorageAvailable) {
         saveSessionData(session.id, session);
+        setCurrentSessionId(session.id);
       }
       
       return session;
@@ -154,6 +178,19 @@ export const StudyProvider = ({ children }) => {
     setCurrentVideo: (video) => {
       console.log('StudyProvider: Setting current video:', video);
       dispatch({ type: STUDY_ACTIONS.SET_CURRENT_VIDEO, payload: video });
+
+      // Track viewed videos in session list
+      const session = state.currentSession;
+      if (session && video) {
+        const videos = Array.isArray(session.videos) ? session.videos.slice() : [];
+        const exists = videos.find(v => v.id === video.id);
+        if (!exists) {
+          videos.push({ id: video.id, title: video.title || '', firstSeenAt: new Date().toISOString() });
+          const updatedSession = { ...session, videos };
+          dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
+          if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+        }
+      }
     },
 
     setVideoTime: (time) => {
@@ -169,6 +206,27 @@ export const StudyProvider = ({ children }) => {
     setStudyPhase: (phase) => {
       console.log('StudyProvider: Setting study phase:', phase);
       dispatch({ type: STUDY_ACTIONS.SET_STUDY_PHASE, payload: phase });
+    },
+
+    // Record a SAM rating for the current session
+    recordRating: ({ videoId, videoTimeSec, valence, arousal }) => {
+      try {
+        if (!state.currentSession) return;
+        const ratings = Array.isArray(state.currentSession.ratings) ? state.currentSession.ratings.slice() : [];
+        ratings.push({
+          id: `rating_${Date.now()}`,
+          videoId,
+          videoTimeSec,
+          valence,
+          arousal,
+          recordedAt: new Date().toISOString()
+        });
+        const updatedSession = { ...state.currentSession, ratings };
+        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
+        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+      } catch (e) {
+        console.error('recordRating error:', e);
+      }
     },
 
     // Configuration management
