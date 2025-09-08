@@ -24,7 +24,7 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
     return null;
   }
 
-  console.log('SAMPopup rendering with open:', open);
+  //console.log('SAMPopup rendering with open:', open);
 
   const handleValenceChange = (value) => {
     console.log('Valence rating changed to:', value);

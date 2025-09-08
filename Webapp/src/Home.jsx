@@ -96,7 +96,8 @@ function Home() {
       <div className="study-info">
         <h3>What to Expect:</h3>
         <ul>
-          <li>You'll watch several YouTube videos</li>
+          <li>You'll watch several videos</li>
+          <li>Disclaimer: Videos may be disturbing</li>
           <li>Every minute, videos will pause for emotion ratings</li>
           <li>Use the SAM scale to rate your valence and arousal</li>
           <li>The study takes approximately 40 minutes</li>

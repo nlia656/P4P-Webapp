@@ -61,14 +61,21 @@ function Player() {
   const handleVideoEnd = () => {
     console.log('Video ended');
     setDebugInfo('Video ended');
-    // TODO: Move to next video or end study
-    setVideoIndex(videoIndex+1);
-    setCurrentVideo(links[videoIndex] || null);
-    if (currentVideo == null){
-      setVideoIndex(0);
-      setCurrentVideo(links[videoIndex] || null);
+
+    let nextIndex = videoIndex + 1;
+    if (nextIndex >= links.length){
+      nextIndex = 0;
     }
+    setVideoIndex(nextIndex);
+    setCurrentVideo(links[nextIndex]);
+    handleLastSam();
   };
+
+  const handleLastSam = () => {
+      if ((videoTime%60)>20){
+      setIsSAMOpen(true);
+    }
+  }
 
   // Handle video pause
   const handleVideoPause = () => {
