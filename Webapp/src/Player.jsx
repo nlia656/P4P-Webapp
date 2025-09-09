@@ -2,8 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useStudy } from './context/StudyContext';
 import { exportAllData } from './utils/localStorage';
 import YouTubePlayer from './components/YouTubePlayer';
+import MP4Player from './components/MP4Player';
 import SAMPopup from './SAMScale/SAMPopup';
 import './App.css';
+import { useLocation, useNavigate } from "react-router-dom";
+
+//temp mp4
+import mp4test from './videos/HVHA2.mp4';
 
 function Player() {
   const studyContext = useStudy();
@@ -26,32 +31,16 @@ function Player() {
   const [showPauseMessage, setShowPauseMessage] = useState(false);
   const [lastRatingTime, setLastRatingTime] = useState(0);
   const [debugInfo, setDebugInfo] = useState('');
-  const [duration, setDuration] = useState(0);
-  const [playlist, setPlaylist] = useState([
-    { id: '983bBbJx0Mk', title: 'Sample Video 1' },
-    { id: 'dQw4w9WgXcQ', title: 'Sample Video 2' }
-  ]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
+  const location = useLocation();
+  const links = location.state?.links || [];
+  const [videoIndex, setVideoIndex] = useState(0);
   const playerRef = useRef(null);
 
-  // Initialize video when component mounts or when playlist changes
-  useEffect(() => {
-    if (!currentVideo && setCurrentVideo && playlist.length > 0) {
-      setCurrentVideo(playlist[currentIndex]);
+useEffect(() => {
+    if (!currentVideo && setCurrentVideo) {
+      setCurrentVideo(links[videoIndex] || null);
     }
-  }, [currentVideo, setCurrentVideo, playlist, currentIndex]);
-
-  // Update current video when index changes
-  useEffect(() => {
-    if (setCurrentVideo && playlist[currentIndex]) {
-      setCurrentVideo(playlist[currentIndex]);
-      setVideoTime(0);
-      setLastRatingTime(0);
-      setShowPauseMessage(false);
-      setIsSAMOpen(false);
-    }
-  }, [currentIndex]);
+  }, [currentVideo, setCurrentVideo]);
 
   // Handle video time updates
   const handleTimeUpdate = (time) => {
@@ -66,16 +55,23 @@ function Player() {
     }
   };
 
-  // Duration callback from player
-  const handleDuration = (d) => {
-    setDuration(d || 0);
-  };
-
   // Handle video end
   const handleVideoEnd = () => {
     setDebugInfo('Video ended');
-    handleNext();
+    let nextIndex = videoIndex + 1;
+    if (nextIndex >= links.length){
+      nextIndex = 0;
+    }
+    setVideoIndex(nextIndex);
+    setCurrentVideo(links[nextIndex]);
+    handleLastSam();
   };
+
+  const handleLastSam = () => {
+      if ((videoTime%60)>20){
+      setIsSAMOpen(true);
+    }
+  }
 
   // Handle video pause
   const handleVideoPause = () => {
@@ -93,8 +89,11 @@ function Player() {
     setDebugInfo('Attempting to pause video for rating');
     
     try {
-      if (playerRef.current && playerRef.current.player) {
-        playerRef.current.player.pauseVideo();
+
+      // && playerRef.current.player
+      if (playerRef.current) {
+        //playerRef.current.player.pauseVideo();
+        playerRef.current.pauseVideo();
         setPaused(true);
         setShowPauseMessage(true);
         setIsSAMOpen(true);
@@ -127,9 +126,10 @@ function Player() {
     setShowPauseMessage(false);
     
     // Resume video after rating
-    if (playerRef.current && playerRef.current.player) {
+    if (playerRef.current) {
       setTimeout(() => {
-        playerRef.current.player.playVideo();
+        //playerRef.current.player.playVideo();
+        playerRef.current.playVideo();
         setPaused(false);
         setDebugInfo('Video resumed after rating');
       }, 500);
@@ -139,13 +139,15 @@ function Player() {
   // Handle manual pause/resume
   const handlePauseResume = () => {
     try {
-      if (playerRef.current && playerRef.current.player) {
+      if (playerRef.current) {
         if (isPaused) {
-          playerRef.current.player.playVideo();
+          //playerRef.current.player.playVideo();
+          playerRef.current.playVideo();
           setPaused(false);
           setDebugInfo('Video resumed manually');
         } else {
-          playerRef.current.player.pauseVideo();
+          //playerRef.current.player.pauseVideo();
+          playerRef.current.pauseVideo();
           setPaused(true);
           setDebugInfo('Video paused manually');
         }
@@ -212,16 +214,27 @@ function Player() {
 
       <div className="video-section">
         {currentVideo && (
-          <YouTubePlayer
-            ref={playerRef}
-            videoId={currentVideo.id}
-            onVideoEnd={handleVideoEnd}
-            onVideoPause={handleVideoPause}
-            onVideoPlay={handleVideoPlay}
-            onTimeUpdate={handleTimeUpdate}
-            onDuration={handleDuration}
-            isPaused={isPaused}
-          />
+          currentVideo.type === "youtube" ? (
+            <YouTubePlayer
+              ref={playerRef}
+              videoId={currentVideo.id}
+              onVideoEnd={handleVideoEnd}
+              onVideoPause={handleVideoPause}
+              onVideoPlay={handleVideoPlay}
+              onTimeUpdate={handleTimeUpdate}
+              isPaused={isPaused}
+            />
+          ) : currentVideo.type === "mp4" ? (
+              <MP4Player
+              ref={playerRef}
+              videoSrc={mp4test}
+              onVideoEnd={handleVideoEnd}
+              onVideoPause={handleVideoPause}
+              onVideoPlay={handleVideoPlay}
+              onTimeUpdate={handleTimeUpdate}
+              isPaused={isPaused}
+            />
+          ) : null
         )}
       </div>
 
@@ -298,7 +311,6 @@ function Player() {
         <p>• Paused: {(isPaused || false).toString()}</p>
         <p>• Last Rating Time: {lastRatingTime || 0}s</p>
         <p>• Current Time: {Math.floor(videoTime || 0)}s</p>
-        <p>• Duration: {Math.floor(safeDuration)}s</p>
         <p>• Player Ref Available: {(playerRef.current !== null).toString()}</p>
         <p>• Player Instance Available: {String(Boolean(playerRef.current && playerRef.current.player))}</p>
         <p>• Participant: {participant ? 'Yes' : 'No'}</p>

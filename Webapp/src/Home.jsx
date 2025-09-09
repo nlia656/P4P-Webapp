@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useStudy } from './context/StudyContext';
 import './App.css';
-import videoList from "./videos/videos.json";
+import videoJson from "./videos/videos.json";
 
 function Home() {
   const navigate = useNavigate();
   const { setParticipant, startSession, setStudyPhase } = useStudy();
   const [participantName, setParticipantName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const videoList = videoJson.sort(() => Math.random() - 0.5);
   console.log('Home component rendering');
 
   const handleStartStudy = async () => {
@@ -96,7 +96,8 @@ function Home() {
       <div className="study-info">
         <h3>What to Expect:</h3>
         <ul>
-          <li>You'll watch several YouTube videos</li>
+          <li>You'll watch several videos</li>
+          <li>Disclaimer: Videos may be disturbing</li>
           <li>Every minute, videos will pause for emotion ratings</li>
           <li>Use the SAM scale to rate your valence and arousal</li>
           <li>The study takes approximately 40 minutes</li>
