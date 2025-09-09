@@ -159,13 +159,13 @@ useEffect(() => {
     }
   };
 
-  const handlePrev = () => {
-    setCurrentIndex((idx) => (idx > 0 ? idx - 1 : 0));
-  };
+  // const handlePrev = () => {
+  //   setCurrentIndex((idx) => (idx > 0 ? idx - 1 : 0));
+  // };
 
-  const handleNext = () => {
-    setCurrentIndex((idx) => (idx < playlist.length - 1 ? idx + 1 : idx));
-  };
+  // const handleNext = () => {
+  //   setCurrentIndex((idx) => (idx < playlist.length - 1 ? idx + 1 : idx));
+  // };
 
   // Handle SAM popup close
   const handleSAMClose = () => {
@@ -198,9 +198,9 @@ useEffect(() => {
   }
 
   // Progress calculations
-  const safeDuration = duration || (playerRef.current?.getDuration?.() ?? 0) || 0;
-  const progress = safeDuration > 0 ? Math.min(100, Math.max(0, (videoTime / safeDuration) * 100)) : 0;
-  const remaining = Math.max(0, safeDuration - videoTime);
+  // const safeDuration = duration || (playerRef.current?.getDuration?.() ?? 0) || 0;
+  // const progress = safeDuration > 0 ? Math.min(100, Math.max(0, (videoTime / safeDuration) * 100)) : 0;
+  // const remaining = Math.max(0, safeDuration - videoTime);
 
   return (
     <div className="player-container">
@@ -239,7 +239,7 @@ useEffect(() => {
       </div>
 
       {/* Progress Bar */}
-      <div style={{ width: '100%', maxWidth: 800, margin: '0.75rem auto 1rem' }}>
+      {/* <div style={{ width: '100%', maxWidth: 800, margin: '0.75rem auto 1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#666' }}>
           <span>Progress</span>
           <span>{Math.floor(videoTime)}s / {Math.floor(safeDuration)}s · Remaining {Math.floor(remaining)}s</span>
@@ -247,7 +247,7 @@ useEffect(() => {
         <div style={{ height: 10, background: '#eee', borderRadius: 6, overflow: 'hidden' }}>
           <div style={{ width: `${progress}%`, height: '100%', background: '#667eea' }} />
         </div>
-      </div>
+      </div> */}
 
       <div className="player-controls">
         <button 
@@ -257,21 +257,21 @@ useEffect(() => {
           {isPaused ? 'Resume' : 'Pause'}
         </button>
         
-        <button 
+        {/* <button 
           className="control-button"
           onClick={handlePrev}
           disabled={currentIndex === 0}
         >
           Prev
-        </button>
+        </button> */}
 
-        <button 
+        {/* <button 
           className="control-button"
           onClick={handleNext}
           disabled={currentIndex >= playlist.length - 1}
         >
           Next
-        </button>
+        </button> */}
 
         <button 
           className="control-button"
@@ -291,9 +291,9 @@ useEffect(() => {
 
         <div className="video-info">
           <span>Current Time: {Math.floor(videoTime || 0)}s</span>
-          <span>Video: {currentVideo?.title || 'No Video'}</span>
+          <span>Video: {currentVideo?.name || 'No Video'}</span>
           <span>Status: {isPaused ? 'Paused' : 'Playing'}</span>
-          <span>Clip {currentIndex + 1}/{playlist.length}</span>
+          <span>Clip {videoIndex + 1}/{links.length}</span>
         </div>
       </div>
 
