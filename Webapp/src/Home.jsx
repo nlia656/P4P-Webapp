@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useStudy } from './context/StudyContext';
 import './App.css';
-import videoList from "./videos/videos.json";
+import videoJson from "./videos/videos.json";
 
 function Home() {
   const navigate = useNavigate();
   const { setParticipant, startSession, setStudyPhase } = useStudy();
   const [participantName, setParticipantName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const videoList = videoJson.sort(() => Math.random() - 0.5);
   console.log('Home component rendering');
 
   const handleStartStudy = async () => {
