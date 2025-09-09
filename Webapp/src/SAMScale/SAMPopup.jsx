@@ -119,6 +119,16 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
                 />
                 <span>4</span>
               </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="valence" 
+                  value="5"
+                  checked={valenceRating === 5}
+                  onChange={() => handleValenceChange(5)}
+                />
+                <span>5</span>
+              </label>
             </div>
           </div>
           
@@ -165,6 +175,16 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
                   onChange={() => handleArousalChange(4)}
                 />
                 <span>4</span>
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="arousal" 
+                  value="5"
+                  checked={arousalRating === 5}
+                  onChange={() => handleArousalChange(5)}
+                />
+                <span>5</span>
               </label>
             </div>
           </div>

@@ -8,7 +8,8 @@ const YouTubePlayer = forwardRef(({
   onVideoPlay, 
   onTimeUpdate,
   isPaused = false,
-  onReady 
+  onReady,
+  onDuration
 }, ref) => {
   const [player, setPlayer] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -34,7 +35,9 @@ const YouTubePlayer = forwardRef(({
   // Handle player ready event
   const onPlayerReady = (event) => {
     setPlayer(event.target);
-    setDuration(event.target.getDuration());
+    const d = event.target.getDuration?.() || 0;
+    setDuration(d);
+    if (typeof onDuration === 'function') onDuration(d);
     if (onReady) onReady(event.target);
   };
 
@@ -42,6 +45,15 @@ const YouTubePlayer = forwardRef(({
   const onPlayerStateChange = (event) => {
     const state = event.data;
     
+    // Try to refresh duration when we start playing
+    if (event?.target && (state === window.YT.PlayerState.PLAYING || state === window.YT.PlayerState.PAUSED)) {
+      const d = event.target.getDuration?.() || duration;
+      if (d && d !== duration) {
+        setDuration(d);
+        if (typeof onDuration === 'function') onDuration(d);
+      }
+    }
+
     switch (state) {
       case window.YT.PlayerState.PLAYING:
         setIsPlaying(true);
@@ -112,7 +124,7 @@ const YouTubePlayer = forwardRef(({
   };
 
   const getDuration = () => {
-    return player ? player.getDuration() : 0;
+    return player ? (player.getDuration?.() || duration) : duration;
   };
 
   // Expose methods to parent component

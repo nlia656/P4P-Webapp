@@ -4,7 +4,9 @@ const STORAGE_KEYS = {
   PARTICIPANT_DATA: 'emotion_study_participant_data',
   STUDY_CONFIG: 'emotion_study_config',
   VIDEO_LIST: 'emotion_study_video_list',
-  SESSION_DATA: 'emotion_study_session_data'
+  SESSION_DATA: 'emotion_study_session_data',
+  CURRENT_PARTICIPANT_ID: 'emotion_study_current_participant_id',
+  CURRENT_SESSION_ID: 'emotion_study_current_session_id'
 };
 
 // Participant data management
@@ -136,6 +138,48 @@ export const getAllSessionData = () => {
   } catch (error) {
     console.error('Error getting all session data:', error);
     return {};
+  }
+};
+
+// Current IDs helpers (for persistence/restoration)
+export const setCurrentParticipantId = (participantId) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_PARTICIPANT_ID, participantId);
+  } catch (error) {
+    console.error('Error setting current participant id:', error);
+  }
+};
+
+export const getCurrentParticipantId = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.CURRENT_PARTICIPANT_ID);
+  } catch {
+    return null;
+  }
+};
+
+export const setCurrentSessionId = (sessionId) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_SESSION_ID, sessionId);
+  } catch (error) {
+    console.error('Error setting current session id:', error);
+  }
+};
+
+export const getCurrentSessionId = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.CURRENT_SESSION_ID);
+  } catch {
+    return null;
+  }
+};
+
+export const clearCurrentIds = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_PARTICIPANT_ID);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION_ID);
+  } catch (error) {
+    console.error('Error clearing current ids:', error);
   }
 };
 
