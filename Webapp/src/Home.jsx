@@ -6,7 +6,7 @@ import videoJson from "./videos/videos.json";
 
 function Home() {
   const navigate = useNavigate();
-  const { setParticipant, startSession, setStudyPhase } = useStudy();
+  const { setParticipant, startSession, setStudyPhase, startWebcam } = useStudy();
   const [participantName, setParticipantName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const videoList = videoJson.sort(() => Math.random() - 0.5);
@@ -39,6 +39,9 @@ function Home() {
 
       // Update study phase
       setStudyPhase('video');
+
+      // Start webcam (non-blocking). If permission denied, continue.
+      try { await startWebcam(); } catch (e) { console.warn('Webcam start failed:', e); }
 
       console.log('Navigating to player...');
       // Navigate to player

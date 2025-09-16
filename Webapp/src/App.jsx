@@ -5,6 +5,7 @@ import Home from './Home';
 import Admin from './Admin';
 import Player from './Player';
 import './App.css';
+import WebcamOverlay from './components/WebcamOverlay';
 
 function App() {
   console.log('App component rendering');
@@ -13,6 +14,7 @@ function App() {
     <StudyProvider>
       <BrowserRouter>
         <div className="app">
+          <WebcamOverlay />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/home" element={<Home />} />

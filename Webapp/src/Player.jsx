@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { captureWebcamBlob } from './utils/capture';
 import { useStudy } from './context/StudyContext';
 import { exportAllData } from './utils/localStorage';
 import YouTubePlayer from './components/YouTubePlayer';
@@ -9,6 +10,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 //temp mp4
 import mp4test from './videos/HVHA2.mp4';
+import PassiveSensor from './components/PassiveSensor';
+import FusionSensor from './components/FusionSensor';
 
 function Player() {
   const studyContext = useStudy();
@@ -251,6 +254,9 @@ useEffect(() => {
             />
           ) : null
         )}
+        {/* Headless passive and fusion runners */}
+        <PassiveSensor />
+        <FusionSensor />
       </div>
 
       <div className="player-controls">
@@ -263,7 +269,7 @@ useEffect(() => {
 
         <div className="video-info">
           <span>Current Time: {Math.floor(videoTime || 0)}s</span>
-          <span>Video: {currentVideo?.title || 'No Video'}</span>
+          <span>Video: {currentVideo?.name || currentVideo?.title || 'No Video'}</span>
           <span>Status: {isPaused ? 'Paused' : 'Playing'}</span>
           <span>Clip {videoIndex + 1}/{links.length}</span>
         </div>

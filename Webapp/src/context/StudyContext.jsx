@@ -23,7 +23,16 @@ const initialState = {
   videoTime: 0,
   isPaused: false,
   studyPhase: 'registration', // registration, video, rating, complete
-  error: null
+  error: null,
+  webcamStream: null,
+  isWebcamActive: false,
+  showWebcam: false,
+  webcamDevices: [],
+  selectedWebcamId: null,
+  webcamError: null,
+  visualPredictions: [],
+  passivePredictions: [],
+  fusedPredictions: []
 };
 
 // Action types
@@ -38,7 +47,13 @@ const STUDY_ACTIONS = {
   SET_STUDY_PHASE: 'SET_STUDY_PHASE',
   SET_ERROR: 'SET_ERROR',
   CLEAR_ERROR: 'CLEAR_ERROR',
-  RESET_STUDY: 'RESET_STUDY'
+  RESET_STUDY: 'RESET_STUDY',
+  SET_WEBCAM_STREAM: 'SET_WEBCAM_STREAM',
+  SET_WEBCAM_ACTIVE: 'SET_WEBCAM_ACTIVE',
+  SET_SHOW_WEBCAM: 'SET_SHOW_WEBCAM',
+  SET_WEBCAM_DEVICES: 'SET_WEBCAM_DEVICES',
+  SET_SELECTED_WEBCAM_ID: 'SET_SELECTED_WEBCAM_ID',
+  SET_WEBCAM_ERROR: 'SET_WEBCAM_ERROR'
 };
 
 // Reducer function
@@ -76,6 +91,33 @@ const studyReducer = (state, action) => {
     
     case STUDY_ACTIONS.RESET_STUDY:
       return { ...initialState, isStorageAvailable: state.isStorageAvailable };
+
+    case STUDY_ACTIONS.SET_WEBCAM_STREAM:
+      return { ...state, webcamStream: action.payload };
+
+    case STUDY_ACTIONS.SET_WEBCAM_ACTIVE:
+      return { ...state, isWebcamActive: action.payload };
+
+    case STUDY_ACTIONS.SET_SHOW_WEBCAM:
+      return { ...state, showWebcam: action.payload };
+
+    case STUDY_ACTIONS.SET_WEBCAM_DEVICES:
+      return { ...state, webcamDevices: action.payload };
+
+    case STUDY_ACTIONS.SET_SELECTED_WEBCAM_ID:
+      return { ...state, selectedWebcamId: action.payload };
+
+    case STUDY_ACTIONS.SET_WEBCAM_ERROR:
+      return { ...state, webcamError: action.payload };
+    
+    case 'ADD_VISUAL_PREDICTION':
+      return { ...state, visualPredictions: [...(state.visualPredictions || []), action.payload] };
+
+    case 'ADD_PASSIVE_PREDICTION':
+      return { ...state, passivePredictions: [...(state.passivePredictions || []), action.payload] };
+
+    case 'ADD_FUSED_PREDICTION':
+      return { ...state, fusedPredictions: [...(state.fusedPredictions || []), action.payload] };
     
     default:
       return state;
@@ -151,7 +193,10 @@ export const StudyProvider = ({ children }) => {
         startTime: new Date().toISOString(),
         status: 'active',
         videos: [],
-        ratings: []
+        ratings: [],
+        visualPredictions: [],
+        passivePredictions: [],
+        fusedPredictions: []
       };
       
       dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: session });
@@ -185,7 +230,7 @@ export const StudyProvider = ({ children }) => {
         const videos = Array.isArray(session.videos) ? session.videos.slice() : [];
         const exists = videos.find(v => v.id === video.id);
         if (!exists) {
-          videos.push({ id: video.id, title: video.title || '', firstSeenAt: new Date().toISOString() });
+          videos.push({ id: video.id, name: video.name || '', firstSeenAt: new Date().toISOString() });
           const updatedSession = { ...session, videos };
           dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
           if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
@@ -252,7 +297,193 @@ export const StudyProvider = ({ children }) => {
     // Reset study
     resetStudy: () => {
       console.log('StudyProvider: Resetting study');
+      try {
+        if (state.webcamStream) {
+          state.webcamStream.getTracks().forEach(t => t.stop());
+        }
+      } catch (e) {
+        console.warn('StudyProvider: Error stopping webcam on reset:', e);
+      }
       dispatch({ type: STUDY_ACTIONS.RESET_STUDY });
+    },
+
+    // Webcam controls
+    startWebcam: async (deviceId) => {
+      try {
+        if (state.isWebcamActive && state.webcamStream) {
+          return state.webcamStream;
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('getUserMedia not supported in this browser');
+        }
+        console.log('StudyProvider: Requesting webcam access...');
+        const idealConstraints = deviceId
+          ? { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 60 } }
+          : { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 60 } };
+
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: idealConstraints, audio: false });
+        } catch (e1) {
+          console.warn('1080p constraints failed, trying 1280x720...', e1);
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: deviceId ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } : { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+              audio: false
+            });
+          } catch (e2) {
+            console.warn('720p constraints failed, falling back to default...', e2);
+            stream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: false });
+          }
+        }
+
+        try {
+          const track = stream.getVideoTracks && stream.getVideoTracks()[0];
+          if (track && track.applyConstraints) {
+            const hardConstraints = deviceId
+              ? { deviceId: { exact: deviceId }, width: { min: 1280, ideal: 1920 }, height: { min: 720, ideal: 1080 }, frameRate: { min: 24, ideal: 30 } }
+              : { width: { min: 1280, ideal: 1920 }, height: { min: 720, ideal: 1080 }, frameRate: { min: 24, ideal: 30 } };
+            await track.applyConstraints(hardConstraints).catch(() => {});
+          }
+        } catch (e) {
+          console.warn('applyConstraints failed:', e);
+        }
+
+        const settings = (stream.getVideoTracks && stream.getVideoTracks()[0] && stream.getVideoTracks()[0].getSettings && stream.getVideoTracks()[0].getSettings()) || {};
+        console.log('Webcam settings:', settings);
+
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_STREAM, payload: stream });
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_ACTIVE, payload: true });
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_ERROR, payload: null });
+        return stream;
+      } catch (err) {
+        console.error('StudyProvider: startWebcam error:', err);
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_ACTIVE, payload: false });
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_STREAM, payload: null });
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_ERROR, payload: String(err?.message || err) });
+        dispatch({ type: STUDY_ACTIONS.SET_ERROR, payload: String(err?.message || err) });
+        throw err;
+      }
+    },
+
+    stopWebcam: () => {
+      try {
+        if (state.webcamStream) {
+          state.webcamStream.getTracks().forEach(t => t.stop());
+        }
+      } catch (e) {
+        console.warn('StudyProvider: stopWebcam warning:', e);
+      } finally {
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_STREAM, payload: null });
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_ACTIVE, payload: false });
+      }
+    },
+
+    // Capture a single frame from the active webcam as a data URL
+    captureWebcamFrameDataUrl: (mime = 'image/jpeg', quality = 0.8) => {
+      try {
+        const stream = state.webcamStream;
+        if (!state.isWebcamActive || !stream) return null;
+        const track = stream.getVideoTracks?.()[0];
+        if (!track) return null;
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        // We assume the stream is already playing in UI; draw directly
+        const settings = track.getSettings?.() || {};
+        const width = settings.width || 320;
+        const height = settings.height || 240;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        // Draw without waiting; using the live track content
+        try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch (_) {}
+        try { track.applyConstraints?.({}); } catch (_) {}
+        return canvas.toDataURL(mime, quality);
+      } catch (e) {
+        console.warn('captureWebcamFrameDataUrl failed:', e);
+        return null;
+      }
+    },
+
+    toggleWebcamOverlay: () => {
+      dispatch({ type: STUDY_ACTIONS.SET_SHOW_WEBCAM, payload: !state.showWebcam });
+    },
+
+    showWebcamOverlay: () => {
+      dispatch({ type: STUDY_ACTIONS.SET_SHOW_WEBCAM, payload: true });
+    },
+
+    hideWebcamOverlay: () => {
+      dispatch({ type: STUDY_ACTIONS.SET_SHOW_WEBCAM, payload: false });
+    },
+
+    refreshWebcamDevices: async () => {
+      try {
+        if (!navigator.mediaDevices?.enumerateDevices) return [];
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_DEVICES, payload: cams });
+        return cams;
+      } catch (e) {
+        console.warn('enumerateDevices failed:', e);
+        dispatch({ type: STUDY_ACTIONS.SET_WEBCAM_DEVICES, payload: [] });
+        return [];
+      }
+    },
+
+    selectWebcam: (deviceId) => {
+      dispatch({ type: STUDY_ACTIONS.SET_SELECTED_WEBCAM_ID, payload: deviceId || null });
+    },
+
+    // Record a visual prediction into session JSON
+    recordVisualPrediction: (prediction) => {
+      try {
+        // local list for quick access
+        dispatch({ type: 'ADD_VISUAL_PREDICTION', payload: prediction });
+        // persist into session object
+        const session = state.currentSession;
+        if (!session) return;
+        const visual = Array.isArray(session.visualPredictions) ? session.visualPredictions.slice() : [];
+        visual.push(prediction);
+        const updatedSession = { ...session, visualPredictions: visual };
+        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
+        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+      } catch (e) {
+        console.warn('recordVisualPrediction error:', e);
+      }
+    },
+
+    // Record a passive prediction into session JSON
+    recordPassivePrediction: (prediction) => {
+      try {
+        dispatch({ type: 'ADD_PASSIVE_PREDICTION', payload: prediction });
+        const session = state.currentSession;
+        if (!session) return;
+        const passive = Array.isArray(session.passivePredictions) ? session.passivePredictions.slice() : [];
+        passive.push(prediction);
+        const updatedSession = { ...session, passivePredictions: passive };
+        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
+        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+      } catch (e) {
+        console.warn('recordPassivePrediction error:', e);
+      }
+    },
+
+    // Record a fused prediction into session JSON
+    recordFusedPrediction: (prediction) => {
+      try {
+        dispatch({ type: 'ADD_FUSED_PREDICTION', payload: prediction });
+        const session = state.currentSession;
+        if (!session) return;
+        const fused = Array.isArray(session.fusedPredictions) ? session.fusedPredictions.slice() : [];
+        fused.push(prediction);
+        const updatedSession = { ...session, fusedPredictions: fused };
+        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
+        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+      } catch (e) {
+        console.warn('recordFusedPrediction error:', e);
+      }
     }
   };
 

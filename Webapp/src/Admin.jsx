@@ -6,32 +6,32 @@ import {
   clearAllData, 
   getCurrentSessionId, 
   getSessionData,
-  clearCurrentIds
+  clearCurrentIds,
+  saveSessionData
 } from './utils/localStorage';
 import './App.css';
 
 function Admin() {
   const navigate = useNavigate();
-  const { resetStudy } = useStudy();
+  const { resetStudy, currentSession } = useStudy();
 
-  const currentSession = useMemo(() => {
+  const currentSessionFromStorage = useMemo(() => {
     const sid = getCurrentSessionId();
     return sid ? getSessionData(sid) : null;
   }, []);
 
   const handleExportCurrentSession = () => {
     try {
-      const sid = getCurrentSessionId();
-      if (!sid) {
+      const session = currentSession || currentSessionFromStorage;
+      if (!session) {
         alert('No active session to export.');
         return;
       }
-      const session = getSessionData(sid);
       const dataStr = JSON.stringify({ session }, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `emotion_study_session_${sid}.json`;
+      link.download = `emotion_study_session_${session.id}.json`;
       link.click();
     } catch (e) {
       console.error(e);
@@ -41,6 +41,12 @@ function Admin() {
 
 
   const handleExportAll = () => {
+    try {
+      // Ensure latest in-memory session (including passive/visual predictions) is flushed to storage
+      if (currentSession?.id) {
+        saveSessionData(currentSession.id, currentSession);
+      }
+    } catch (_) {}
     const ok = exportAllData();
     if (!ok) alert('Failed to export data.');
   };
@@ -83,7 +89,7 @@ function Admin() {
       <div className="study-info" style={{ maxWidth: 720, margin: '0 auto' }}>
         <h3>Current Session Overview</h3>
         <pre style={{ whiteSpace: 'pre-wrap', background: '#f7f7f7', padding: 12, borderRadius: 8 }}>
-{JSON.stringify(currentSession || { message: 'No active session' }, null, 2)}
+{JSON.stringify(currentSession || currentSessionFromStorage || { message: 'No active session' }, null, 2)}
         </pre>
       </div>
     </div>
