@@ -35,12 +35,19 @@ function Player() {
   const links = location.state?.links || [];
   const [videoIndex, setVideoIndex] = useState(0);
   const playerRef = useRef(null);
+  const [advanceAfterSAM, setAdvanceAfterSAM] = useState(false);
+  const [duration, setDuration] = useState(0);
 
 useEffect(() => {
     if (!currentVideo && setCurrentVideo) {
       setCurrentVideo(links[videoIndex] || null);
     }
   }, [currentVideo, setCurrentVideo]);
+
+  // Reset the last 60s checkpoint whenever the video changes
+  useEffect(() => {
+    setLastRatingTime(0);
+  }, [currentVideo?.id]);
 
   // Handle video time updates
   const handleTimeUpdate = (time) => {
@@ -55,23 +62,14 @@ useEffect(() => {
     }
   };
 
-  // Handle video end
+  // Handle video end → open SAM, advance after rating
   const handleVideoEnd = () => {
     setDebugInfo('Video ended');
-    let nextIndex = videoIndex + 1;
-    if (nextIndex >= links.length){
-      nextIndex = 0;
-    }
-    setVideoIndex(nextIndex);
-    setCurrentVideo(links[nextIndex]);
-    handleLastSam();
+    setAdvanceAfterSAM(true);
+    setIsSAMOpen(true);
+    setShowPauseMessage(true);
+    setPaused(true);
   };
-
-  const handleLastSam = () => {
-      if ((videoTime%60)>20){
-      setIsSAMOpen(true);
-    }
-  }
 
   // Handle video pause
   const handleVideoPause = () => {
@@ -124,11 +122,27 @@ useEffect(() => {
     
     setIsSAMOpen(false);
     setShowPauseMessage(false);
-    
-    // Resume video after rating
+
+    // If rating was triggered at the end of a video, advance to next clip
+    if (advanceAfterSAM) {
+      let nextIndex = videoIndex + 1;
+      if (nextIndex >= links.length) nextIndex = 0;
+      setVideoIndex(nextIndex);
+      setCurrentVideo(links[nextIndex] || null);
+      setAdvanceAfterSAM(false);
+      if (playerRef.current) {
+        setTimeout(() => {
+          playerRef.current.playVideo();
+          setPaused(false);
+          setDebugInfo('Next video started after end-of-video rating');
+        }, 500);
+      }
+      return;
+    }
+
+    // Resume same video after mid-video rating
     if (playerRef.current) {
       setTimeout(() => {
-        //playerRef.current.player.playVideo();
         playerRef.current.playVideo();
         setPaused(false);
         setDebugInfo('Video resumed after rating');
@@ -159,21 +173,25 @@ useEffect(() => {
     }
   };
 
-  // const handlePrev = () => {
-  //   setCurrentIndex((idx) => (idx > 0 ? idx - 1 : 0));
-  // };
+  const handlePrev = () => {
+    const prev = videoIndex > 0 ? videoIndex - 1 : 0;
+    setVideoIndex(prev);
+    setCurrentVideo(links[prev] || null);
+  };
 
-  // const handleNext = () => {
-  //   setCurrentIndex((idx) => (idx < playlist.length - 1 ? idx + 1 : idx));
-  // };
+  const handleNext = () => {
+    const next = videoIndex < links.length - 1 ? videoIndex + 1 : links.length - 1;
+    setVideoIndex(next);
+    setCurrentVideo(links[next] || null);
+  };
 
   // Handle SAM popup close
   const handleSAMClose = () => {
     setIsSAMOpen(false);
     setShowPauseMessage(false);
     
-    if (isPaused && playerRef.current && playerRef.current.player) {
-      playerRef.current.player.playVideo();
+    if (isPaused && playerRef.current) {
+      playerRef.current.playVideo();
       setPaused(false);
       setDebugInfo('Video resumed after popup close');
     }
@@ -197,11 +215,6 @@ useEffect(() => {
     );
   }
 
-  // Progress calculations
-  // const safeDuration = duration || (playerRef.current?.getDuration?.() ?? 0) || 0;
-  // const progress = safeDuration > 0 ? Math.min(100, Math.max(0, (videoTime / safeDuration) * 100)) : 0;
-  // const remaining = Math.max(0, safeDuration - videoTime);
-
   return (
     <div className="player-container">
       <div className="player-header">
@@ -223,6 +236,7 @@ useEffect(() => {
               onVideoPlay={handleVideoPlay}
               onTimeUpdate={handleTimeUpdate}
               isPaused={isPaused}
+              onDuration={(d) => setDuration(d || 0)}
             />
           ) : currentVideo.type === "mp4" ? (
               <MP4Player
@@ -233,21 +247,11 @@ useEffect(() => {
               onVideoPlay={handleVideoPlay}
               onTimeUpdate={handleTimeUpdate}
               isPaused={isPaused}
+              onReady={(video) => setDuration((video && video.duration) || 0)}
             />
           ) : null
         )}
       </div>
-
-      {/* Progress Bar */}
-      {/* <div style={{ width: '100%', maxWidth: 800, margin: '0.75rem auto 1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#666' }}>
-          <span>Progress</span>
-          <span>{Math.floor(videoTime)}s / {Math.floor(safeDuration)}s · Remaining {Math.floor(remaining)}s</span>
-        </div>
-        <div style={{ height: 10, background: '#eee', borderRadius: 6, overflow: 'hidden' }}>
-          <div style={{ width: `${progress}%`, height: '100%', background: '#667eea' }} />
-        </div>
-      </div> */}
 
       <div className="player-controls">
         <button 
@@ -256,42 +260,10 @@ useEffect(() => {
         >
           {isPaused ? 'Resume' : 'Pause'}
         </button>
-        
-        {/* <button 
-          className="control-button"
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-        >
-          Prev
-        </button> */}
-
-        {/* <button 
-          className="control-button"
-          onClick={handleNext}
-          disabled={currentIndex >= playlist.length - 1}
-        >
-          Next
-        </button> */}
-
-        <button 
-          className="control-button"
-          onClick={testSAMPopup}
-          style={{ backgroundColor: '#dc3545' }}
-        >
-          Test SAM Popup
-        </button>
-
-        <button 
-          className="control-button"
-          onClick={exportAllData}
-          style={{ backgroundColor: '#198754' }}
-        >
-          Export Data (JSON)
-        </button>
 
         <div className="video-info">
           <span>Current Time: {Math.floor(videoTime || 0)}s</span>
-          <span>Video: {currentVideo?.name || 'No Video'}</span>
+          <span>Video: {currentVideo?.title || 'No Video'}</span>
           <span>Status: {isPaused ? 'Paused' : 'Playing'}</span>
           <span>Clip {videoIndex + 1}/{links.length}</span>
         </div>
