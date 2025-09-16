@@ -8,11 +8,27 @@ import './App.css';
 import { useLocation, useNavigate } from "react-router-dom";
 
 //temp mp4
-import mp4test from './videos/HVHA2.mp4';
+import HVHA1 from "./videos/HVHA1.mp4";
+import HVHA2 from "./videos/HVHA2.mp4";
+import HVLA1 from "./videos/HVLA1.mp4";
+import HVLA2 from "./videos/HVLA2.mp4";
+import LVHA1 from "./videos/LVHA1.mp4";
+import LVHA2 from "./videos/LVHA2.mp4";
+import LVLA1 from "./videos/LVLA1.mp4";
+import LVLA2 from "./videos/LVLA2.mp4";
 
 function Player() {
   const studyContext = useStudy();
-  
+  const videoSources = {
+    'HVHA1': HVHA1,
+    'HVHA2': HVHA2,
+    'HVLA1': HVLA1,
+    'HVLA2': HVLA2,
+    'LVHA1': LVHA1,
+    'LVHA2': LVHA2,
+    'LVLA1': LVLA1,
+    'LVLA2': LVLA2,
+  };
   // Destructure with default values to prevent null reference errors
   const { 
     participant = null, 
@@ -40,7 +56,7 @@ useEffect(() => {
     if (!currentVideo && setCurrentVideo) {
       setCurrentVideo(links[videoIndex] || null);
     }
-  }, [currentVideo, setCurrentVideo]);
+  }, [currentVideo, setCurrentVideo, videoIndex]);
 
   // Handle video time updates
   const handleTimeUpdate = (time) => {
@@ -63,6 +79,7 @@ useEffect(() => {
       nextIndex = 0;
     }
     setVideoIndex(nextIndex);
+    console.log(videoIndex + "video index");
     setCurrentVideo(links[nextIndex]);
     handleLastSam();
   };
@@ -81,6 +98,7 @@ useEffect(() => {
   // Handle video play
   const handleVideoPlay = () => {
     setDebugInfo('Video playing');
+    console.log(links.length);
     setShowPauseMessage(false);
   };
 
@@ -227,7 +245,7 @@ useEffect(() => {
           ) : currentVideo.type === "mp4" ? (
               <MP4Player
               ref={playerRef}
-              videoSrc={mp4test}
+              videoSrc={videoSources[currentVideo.name]}
               onVideoEnd={handleVideoEnd}
               onVideoPause={handleVideoPause}
               onVideoPlay={handleVideoPlay}

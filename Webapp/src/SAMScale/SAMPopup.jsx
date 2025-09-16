@@ -133,7 +133,7 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
           </div>
           
           <div className="arousal-scale">
-            <h3>Arousal (Calm-Excited)</h3>
+            <h3>Arousal (Calm-Intense)</h3>
             <img src={arousalSAM} alt="Arousal SAM Scale" />
             <div className="radio-buttons">
               <label>
