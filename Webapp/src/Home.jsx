@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useStudy } from './context/StudyContext';
 import './App.css';
 import videoJson from "./videos/videos.json";
+import valenceSAM from './assets/SAMValence.png';
+import arousalSAM from './assets/SAMArousal.png';
 
 function Home() {
   const navigate = useNavigate();
@@ -102,6 +104,14 @@ function Home() {
           <li>Disclaimer: Videos may be disturbing</li>
           <li>Every minute, videos will pause for emotion ratings</li>
           <li>Use the SAM scale to rate your valence and arousal</li>
+          <li>
+            <div>The valence scale is how negative or positive the feeling is</div>
+            <img src={valenceSAM} alt="Valence SAM Scale" className="egImage"/>
+          </li>
+          <li>
+            <div>The arousal scale is how calm or intense the feeling is</div>
+            <img src={arousalSAM} alt="Arousal SAM Scale" className="egImage"/>
+          </li>
           <li>The study takes approximately 40 minutes</li>
           <li>You can pause and resume at any time</li>
         </ul>
@@ -113,4 +123,3 @@ function Home() {
 export default Home;
 
 //what to expect, what they need to do, show sam, assign id instead of name, show countdown towards sam at like 5 seconds so not jumpscare.
-//latin square randomisation for 

@@ -76,7 +76,7 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
 
         <div className='scales'>
           <div className="valence-scale">
-            <h3>Valence (Pleasure-Displeasure)</h3>
+            <h3>Valence (Negative-Positive)</h3>
             <img src={valenceSAM} alt="Valence SAM Scale" />
             <div className="radio-buttons">
               <label>

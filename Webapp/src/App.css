@@ -368,6 +368,10 @@
   cursor: not-allowed;
 }
 
+.egImage {
+  width: 40rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .home-container,

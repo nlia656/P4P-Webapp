@@ -68,7 +68,7 @@ useEffect(() => {
   };
 
   const handleLastSam = () => {
-      if ((videoTime%60)>20){
+      if ((videoTime%60)>15){
       setIsSAMOpen(true);
     }
   }
