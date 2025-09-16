@@ -7,13 +7,14 @@ import videoJson from "./videos/videos.json";
 function Home() {
   const navigate = useNavigate();
   const { setParticipant, startSession, setStudyPhase } = useStudy();
-  const [participantName, setParticipantName] = useState('');
+  const [participantId, setParticipantId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const videoList = videoJson.sort(() => Math.random() - 0.5);
+  // const videoList = videoJson.sort(() => Math.random() - 0.5);
+  const videoList = videoJson;
   console.log('Home component rendering');
 
   const handleStartStudy = async () => {
-    if (!participantName.trim()) {
+    if (!participantId.trim()) {
       alert('Please enter your name to continue.');
       return;
     }
@@ -24,7 +25,7 @@ function Home() {
       // Create participant object
       const participant = {
         id: `participant_${Date.now()}`,
-        name: participantName.trim(),
+        name: participantId.trim(),
         registrationDate: new Date().toISOString()
       };
 
@@ -45,6 +46,7 @@ function Home() {
       navigate("/player", {
             state:{
                 links: videoList,
+                id: participantId,
         }});
     } catch (error) {
       console.error('Error starting study:', error);
@@ -71,14 +73,14 @@ function Home() {
       <div className="registration-form">
         <h2>Participant Registration</h2>
         <div className="input-group">
-          <label htmlFor="name">Please enter your full name:</label>
+          <label htmlFor="name">Please enter your given ID:</label>
           <input
             type="text"
             id="name"
-            value={participantName}
-            onChange={(e) => setParticipantName(e.target.value)}
+            value={participantId}
+            onChange={(e) => setParticipantId(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Enter your name"
+            placeholder="Enter your ID"
             autoComplete="off"
             disabled={isSubmitting}
           />
@@ -87,7 +89,7 @@ function Home() {
         <button 
           className="start-button"
           onClick={handleStartStudy}
-          disabled={isSubmitting || !participantName.trim()}
+          disabled={isSubmitting || !participantId.trim()}
         >
           {isSubmitting ? 'Starting...' : 'Start Study'}
         </button>
@@ -109,3 +111,6 @@ function Home() {
 }
 
 export default Home;
+
+//what to expect, what they need to do, show sam, assign id instead of name, show countdown towards sam at like 5 seconds so not jumpscare.
+//latin square randomisation for 

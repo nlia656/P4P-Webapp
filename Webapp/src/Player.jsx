@@ -33,7 +33,7 @@ function Player() {
   const [debugInfo, setDebugInfo] = useState('');
   const location = useLocation();
   const links = location.state?.links || [];
-  const [videoIndex, setVideoIndex] = useState(0);
+  const [videoIndex, setVideoIndex] = useState(location.state?.id || []);
   const playerRef = useRef(null);
 
 useEffect(() => {
