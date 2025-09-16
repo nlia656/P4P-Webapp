@@ -174,6 +174,22 @@ export const StudyProvider = ({ children }) => {
 
   // Actions
   const actions = {
+    // Internal helper: always merge against the latest persisted session to avoid clobbering
+    _updateSessionSafely: (mutator) => {
+      try {
+        const sid = state.currentSession?.id || getCurrentSessionId();
+        if (!sid) return;
+        const latestStored = getSessionData(sid);
+        const base = latestStored || state.currentSession;
+        if (!base) return;
+        const next = mutator({ ...base });
+        if (!next) return;
+        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: next });
+        if (state.isStorageAvailable) saveSessionData(next.id, next);
+      } catch (e) {
+        console.warn('updateSessionSafely error:', e);
+      }
+    },
     // Participant management
     setParticipant: (participant) => {
       console.log('StudyProvider: Setting participant:', participant);
@@ -225,16 +241,16 @@ export const StudyProvider = ({ children }) => {
       dispatch({ type: STUDY_ACTIONS.SET_CURRENT_VIDEO, payload: video });
 
       // Track viewed videos in session list
-      const session = state.currentSession;
-      if (session && video) {
-        const videos = Array.isArray(session.videos) ? session.videos.slice() : [];
-        const exists = videos.find(v => v.id === video.id);
-        if (!exists) {
-          videos.push({ id: video.id, name: video.name || '', firstSeenAt: new Date().toISOString() });
-          const updatedSession = { ...session, videos };
-          dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
-          if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
-        }
+      if (video) {
+        actions._updateSessionSafely((prev) => {
+          const videos = Array.isArray(prev.videos) ? prev.videos.slice() : [];
+          const exists = videos.find(v => v.id === video.id);
+          if (!exists) {
+            videos.push({ id: video.id, name: video.name || '', firstSeenAt: new Date().toISOString() });
+            return { ...prev, videos };
+          }
+          return prev;
+        });
       }
     },
 
@@ -256,19 +272,18 @@ export const StudyProvider = ({ children }) => {
     // Record a SAM rating for the current session
     recordRating: ({ videoId, videoTimeSec, valence, arousal }) => {
       try {
-        if (!state.currentSession) return;
-        const ratings = Array.isArray(state.currentSession.ratings) ? state.currentSession.ratings.slice() : [];
-        ratings.push({
-          id: `rating_${Date.now()}`,
-          videoId,
-          videoTimeSec,
-          valence,
-          arousal,
-          recordedAt: new Date().toISOString()
+        actions._updateSessionSafely((prev) => {
+          const ratings = Array.isArray(prev.ratings) ? prev.ratings.slice() : [];
+          ratings.push({
+            id: `rating_${Date.now()}`,
+            videoId,
+            videoTimeSec,
+            valence,
+            arousal,
+            recordedAt: new Date().toISOString()
+          });
+          return { ...prev, ratings };
         });
-        const updatedSession = { ...state.currentSession, ratings };
-        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
-        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
       } catch (e) {
         console.error('recordRating error:', e);
       }
@@ -441,14 +456,12 @@ export const StudyProvider = ({ children }) => {
       try {
         // local list for quick access
         dispatch({ type: 'ADD_VISUAL_PREDICTION', payload: prediction });
-        // persist into session object
-        const session = state.currentSession;
-        if (!session) return;
-        const visual = Array.isArray(session.visualPredictions) ? session.visualPredictions.slice() : [];
-        visual.push(prediction);
-        const updatedSession = { ...session, visualPredictions: visual };
-        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
-        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+        // persist into session object (safe merge)
+        actions._updateSessionSafely((prev) => {
+          const visual = Array.isArray(prev.visualPredictions) ? prev.visualPredictions.slice() : [];
+          visual.push(prediction);
+          return { ...prev, visualPredictions: visual };
+        });
       } catch (e) {
         console.warn('recordVisualPrediction error:', e);
       }
@@ -458,13 +471,11 @@ export const StudyProvider = ({ children }) => {
     recordPassivePrediction: (prediction) => {
       try {
         dispatch({ type: 'ADD_PASSIVE_PREDICTION', payload: prediction });
-        const session = state.currentSession;
-        if (!session) return;
-        const passive = Array.isArray(session.passivePredictions) ? session.passivePredictions.slice() : [];
-        passive.push(prediction);
-        const updatedSession = { ...session, passivePredictions: passive };
-        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
-        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+        actions._updateSessionSafely((prev) => {
+          const passive = Array.isArray(prev.passivePredictions) ? prev.passivePredictions.slice() : [];
+          passive.push(prediction);
+          return { ...prev, passivePredictions: passive };
+        });
       } catch (e) {
         console.warn('recordPassivePrediction error:', e);
       }
@@ -474,13 +485,11 @@ export const StudyProvider = ({ children }) => {
     recordFusedPrediction: (prediction) => {
       try {
         dispatch({ type: 'ADD_FUSED_PREDICTION', payload: prediction });
-        const session = state.currentSession;
-        if (!session) return;
-        const fused = Array.isArray(session.fusedPredictions) ? session.fusedPredictions.slice() : [];
-        fused.push(prediction);
-        const updatedSession = { ...session, fusedPredictions: fused };
-        dispatch({ type: STUDY_ACTIONS.SET_SESSION, payload: updatedSession });
-        if (state.isStorageAvailable) saveSessionData(updatedSession.id, updatedSession);
+        actions._updateSessionSafely((prev) => {
+          const fused = Array.isArray(prev.fusedPredictions) ? prev.fusedPredictions.slice() : [];
+          fused.push(prediction);
+          return { ...prev, fusedPredictions: fused };
+        });
       } catch (e) {
         console.warn('recordFusedPrediction error:', e);
       }
