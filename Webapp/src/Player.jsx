@@ -6,6 +6,7 @@ import MP4Player from './components/MP4Player';
 import SAMPopup from './SAMScale/SAMPopup';
 import './App.css';
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 //temp mp4
 import HVHA1 from "./videos/HVHA1.mp4";
@@ -46,6 +47,7 @@ function Player() {
   const [isSAMOpen, setIsSAMOpen] = useState(false);
   const [showPauseMessage, setShowPauseMessage] = useState(false);
   const [lastRatingTime, setLastRatingTime] = useState(0);
+  const lastRatingTimeRef = useRef(0);
   const [debugInfo, setDebugInfo] = useState('');
   const location = useLocation();
   const links = location.state?.links || [];
@@ -59,17 +61,31 @@ useEffect(() => {
   }, [currentVideo, setCurrentVideo, videoIndex]);
 
   // Handle video time updates
-  const handleTimeUpdate = (time) => {
-    setVideoTime(time || 0);
-    
-    // Check if it's time to pause for rating (every 60 seconds)
-    // Only trigger if we haven't already rated at this time
-    if (Math.floor(time || 0) > 0 && Math.floor(time || 0) % 60 === 0 && Math.floor(time || 0) !== lastRatingTime) {
-      setDebugInfo(`Auto-triggering rating at ${Math.floor(time || 0)}s`);
-      handlePauseForRating();
-      setLastRatingTime(Math.floor(time || 0));
-    }
-  };
+ const handleTimeUpdate = (time) => {
+  const currentTime = Math.floor(time || 0);
+  setVideoTime(currentTime);
+
+  if (
+    currentTime > 0 &&
+    currentTime % 60 === 57 &&
+    currentTime !== lastRatingTimeRef.current
+  ) {
+    toast("SAM Assessment opening soon...", { autoClose: 2000 });
+    lastRatingTimeRef.current = currentTime; 
+    setLastRatingTime(currentTime);   
+  }
+  else if (
+    currentTime > 0 &&
+    currentTime % 60 === 0 &&
+    currentTime !== lastRatingTimeRef.current
+  ) {
+    setDebugInfo(`Auto-triggering rating at ${currentTime}s`);
+    handlePauseForRating();
+    lastRatingTimeRef.current = currentTime;
+    setLastRatingTime(currentTime);
+  }
+};
+
 
   // Handle video end
   const handleVideoEnd = () => {

@@ -62,11 +62,11 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
     <div className="sam-popup-overlay">
       <div className="overlay" onClick={handleClose}></div>
       <div className="modal">
-        <nav className="close-button">
+        {/* <nav className="close-button">
           <div className="circle-button" onClick={handleClose}>
             <FontAwesomeIcon icon={faXmark} size="lg" />
           </div>
-        </nav>
+        </nav> */}
         
         <div className="rating-header">
           <h2>Rate Your Current Emotions</h2>
