@@ -237,17 +237,7 @@ useEffect(() => {
     setCurrentVideo(links[next] || null);
   };
 
-  // Handle SAM popup close
-  const handleSAMClose = () => {
-    setIsSAMOpen(false);
-    setShowPauseMessage(false);
-    
-    if (isPaused && playerRef.current) {
-      playerRef.current.playVideo();
-      setPaused(false);
-      setDebugInfo('Video resumed after popup close');
-    }
-  };
+  // (Removed manual close handler; popup can only be closed via Submit)
 
   // Test function to manually open SAM popup
   const testSAMPopup = () => {
@@ -348,7 +338,6 @@ useEffect(() => {
 
       <SAMPopup 
         open={isSAMOpen} 
-        onClose={handleSAMClose}
         onComplete={handleSAMComplete}
         currentTime={videoTime || 0}
       />

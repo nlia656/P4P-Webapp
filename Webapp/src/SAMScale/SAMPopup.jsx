@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import './SAMPopup.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import valenceSAM from '../assets/SAMValence.png';
 import arousalSAM from '../assets/SAMArousal.png';
 
-function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
+function SAMPopup({ open, onComplete, currentTime = 0 }) {
   const [valenceRating, setValenceRating] = useState(null);
   const [arousalRating, setArousalRating] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -48,19 +46,11 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
     }
   };
 
-  const handleClose = () => {
-    console.log('Close clicked');
-    // Reset ratings when closing without submitting
-    setValenceRating(null);
-    setArousalRating(null);
-    onClose();
-  };
-
   const isFormValid = valenceRating !== null && arousalRating !== null;
 
   return (
     <div className="sam-popup-overlay">
-      <div className="overlay" onClick={handleClose}></div>
+      <div className="overlay"></div>
       <div className="modal">
         {/* <nav className="close-button">
           <div className="circle-button" onClick={handleClose}>
