@@ -7,15 +7,34 @@ import MP4Player from './components/MP4Player';
 import SAMPopup from './SAMScale/SAMPopup';
 import './App.css';
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 //temp mp4
-import mp4test from './videos/HVHA2.mp4';
+
 import PassiveSensor from './components/PassiveSensor';
 import FusionSensor from './components/FusionSensor';
 
+import HVHA1 from "./videos/HVHA1.mp4";
+import HVHA2 from "./videos/HVHA2.mp4";
+import HVLA1 from "./videos/HVLA1.mp4";
+import HVLA2 from "./videos/HVLA2.mp4";
+import LVHA1 from "./videos/LVHA1.mp4";
+import LVHA2 from "./videos/LVHA2.mp4";
+import LVLA1 from "./videos/LVLA1.mp4";
+import LVLA2 from "./videos/LVLA2.mp4";
+
 function Player() {
   const studyContext = useStudy();
-  
+  const videoSources = {
+    'HVHA1': HVHA1,
+    'HVHA2': HVHA2,
+    'HVLA1': HVLA1,
+    'HVLA2': HVLA2,
+    'LVHA1': LVHA1,
+    'LVHA2': LVHA2,
+    'LVLA1': LVLA1,
+    'LVLA2': LVLA2,
+  };
   // Destructure with default values to prevent null reference errors
   const { 
     participant = null, 
@@ -33,10 +52,11 @@ function Player() {
   const [isSAMOpen, setIsSAMOpen] = useState(false);
   const [showPauseMessage, setShowPauseMessage] = useState(false);
   const [lastRatingTime, setLastRatingTime] = useState(0);
+  const lastRatingTimeRef = useRef(0);
   const [debugInfo, setDebugInfo] = useState('');
   const location = useLocation();
   const links = location.state?.links || [];
-  const [videoIndex, setVideoIndex] = useState(0);
+  const [videoIndex, setVideoIndex] = useState(location.state?.id || []);
   const playerRef = useRef(null);
   const [advanceAfterSAM, setAdvanceAfterSAM] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -45,7 +65,7 @@ useEffect(() => {
     if (!currentVideo && setCurrentVideo) {
       setCurrentVideo(links[videoIndex] || null);
     }
-  }, [currentVideo, setCurrentVideo]);
+  }, [currentVideo, setCurrentVideo, videoIndex]);
 
   // Reset the last 60s checkpoint whenever the video changes
   useEffect(() => {
@@ -53,27 +73,50 @@ useEffect(() => {
   }, [currentVideo?.id]);
 
   // Handle video time updates
-  const handleTimeUpdate = (time) => {
-    setVideoTime(time || 0);
-    
-    // Check if it's time to pause for rating (every 60 seconds)
-    // Only trigger if we haven't already rated at this time
-    if (Math.floor(time || 0) > 0 && Math.floor(time || 0) % 60 === 0 && Math.floor(time || 0) !== lastRatingTime) {
-      setDebugInfo(`Auto-triggering rating at ${Math.floor(time || 0)}s`);
-      handlePauseForRating();
-      setLastRatingTime(Math.floor(time || 0));
-    }
-  };
+ const handleTimeUpdate = (time) => {
+  const currentTime = Math.floor(time || 0);
+  setVideoTime(currentTime);
+
+  if (
+    currentTime > 0 &&
+    currentTime % 60 === 57 &&
+    currentTime !== lastRatingTimeRef.current
+  ) {
+    toast("SAM Assessment opening soon...", { autoClose: 2000 });
+    lastRatingTimeRef.current = currentTime; 
+    setLastRatingTime(currentTime);   
+  }
+  else if (
+    currentTime > 0 &&
+    currentTime % 60 === 0 &&
+    currentTime !== lastRatingTimeRef.current
+  ) {
+    setDebugInfo(`Auto-triggering rating at ${currentTime}s`);
+    handlePauseForRating();
+    lastRatingTimeRef.current = currentTime;
+    setLastRatingTime(currentTime);
+  }
+};
+
 
   // Handle video end → open SAM, advance after rating
   const handleVideoEnd = () => {
     setDebugInfo('Video ended');
-    setAdvanceAfterSAM(true);
-    setIsSAMOpen(true);
-    setShowPauseMessage(true);
-    setPaused(true);
+    let nextIndex = videoIndex + 1;
+    if (nextIndex >= links.length){
+      nextIndex = 0;
+    }
+    setVideoIndex(nextIndex);
+    console.log(videoIndex + "video index");
+    setCurrentVideo(links[nextIndex]);
+    handleLastSam();
   };
 
+  const handleLastSam = () => {
+      if ((videoTime%60)>15){
+      setIsSAMOpen(true);
+    }
+  };
   // Handle video pause
   const handleVideoPause = () => {
     setDebugInfo('Video paused');
@@ -82,6 +125,7 @@ useEffect(() => {
   // Handle video play
   const handleVideoPlay = () => {
     setDebugInfo('Video playing');
+    console.log(links.length);
     setShowPauseMessage(false);
   };
 
@@ -244,7 +288,7 @@ useEffect(() => {
           ) : currentVideo.type === "mp4" ? (
               <MP4Player
               ref={playerRef}
-              videoSrc={mp4test}
+              videoSrc={videoSources[currentVideo.name]}
               onVideoEnd={handleVideoEnd}
               onVideoPause={handleVideoPause}
               onVideoPlay={handleVideoPlay}
