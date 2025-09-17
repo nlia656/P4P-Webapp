@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StudyProvider } from './context/StudyContext';
+import Landing from './Landing';
 import Home from './Home';
+import Admin from './Admin';
 import Player from './Player';
 import './App.css';
 import { ToastContainer } from 'react-toastify';
@@ -15,7 +17,9 @@ function App() {
       <ToastContainer />
         <div className="app">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/player" element={<Player />} />
           </Routes>
         </div>
