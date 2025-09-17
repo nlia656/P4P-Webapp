@@ -56,7 +56,9 @@ function Player() {
   const [debugInfo, setDebugInfo] = useState('');
   const location = useLocation();
   const links = location.state?.links || [];
-  const [videoIndex, setVideoIndex] = useState(location.state?.id || []);
+  const participantId = location.state?.id || [];
+  const participantIdInt = parseInt(participantId, 10);
+  const [videoIndex, setVideoIndex] = useState(participantIdInt);
   const playerRef = useRef(null);
   const [advanceAfterSAM, setAdvanceAfterSAM] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -103,6 +105,9 @@ useEffect(() => {
   const handleVideoEnd = () => {
     setDebugInfo('Video ended');
     let nextIndex = videoIndex + 1;
+    if (nextIndex == participantIdInt){
+      navigate('/home');
+    } 
     if (nextIndex >= links.length){
       nextIndex = 0;
     }
