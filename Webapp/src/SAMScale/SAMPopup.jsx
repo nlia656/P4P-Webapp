@@ -62,11 +62,11 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
     <div className="sam-popup-overlay">
       <div className="overlay" onClick={handleClose}></div>
       <div className="modal">
-        <nav className="close-button">
+        {/* <nav className="close-button">
           <div className="circle-button" onClick={handleClose}>
             <FontAwesomeIcon icon={faXmark} size="lg" />
           </div>
-        </nav>
+        </nav> */}
         
         <div className="rating-header">
           <h2>Rate Your Current Emotions</h2>
@@ -76,7 +76,7 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
 
         <div className='scales'>
           <div className="valence-scale">
-            <h3>Valence (Pleasure-Displeasure)</h3>
+            <h3>Valence (Negative-Positive)</h3>
             <img src={valenceSAM} alt="Valence SAM Scale" />
             <div className="radio-buttons">
               <label>
@@ -133,7 +133,7 @@ function SAMPopup({ open, onClose, onComplete, currentTime = 0 }) {
           </div>
           
           <div className="arousal-scale">
-            <h3>Arousal (Calm-Excited)</h3>
+            <h3>Arousal (Calm-Intense)</h3>
             <img src={arousalSAM} alt="Arousal SAM Scale" />
             <div className="radio-buttons">
               <label>

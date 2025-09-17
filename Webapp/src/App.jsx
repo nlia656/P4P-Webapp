@@ -5,6 +5,8 @@ import Home from './Home';
 import Admin from './Admin';
 import Player from './Player';
 import './App.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   console.log('App component rendering');
@@ -12,6 +14,7 @@ function App() {
   return (
     <StudyProvider>
       <BrowserRouter>
+      <ToastContainer />
         <div className="app">
           <Routes>
             <Route path="/" element={<Landing />} />
