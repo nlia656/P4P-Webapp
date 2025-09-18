@@ -270,7 +270,7 @@ export const StudyProvider = ({ children }) => {
     },
 
     // Record a SAM rating for the current session
-    recordRating: ({ videoId, videoTimeSec, valence, arousal }) => {
+    recordRating: ({ videoId, videoTimeSec, valence, arousal, freeEmotion }) => {
       try {
         actions._updateSessionSafely((prev) => {
           const ratings = Array.isArray(prev.ratings) ? prev.ratings.slice() : [];
@@ -280,6 +280,7 @@ export const StudyProvider = ({ children }) => {
             videoTimeSec,
             valence,
             arousal,
+            freeEmotion,
             recordedAt: new Date().toISOString()
           });
           return { ...prev, ratings };
