@@ -19,7 +19,8 @@ function WebcamOverlay() {
     currentSession,
     videoTime,
     isPaused,
-    currentVideo
+    currentVideo,
+    participant
   } = useStudy();
 
   const videoRef = useRef(null);
@@ -78,6 +79,9 @@ function WebcamOverlay() {
       if (!blob) return false;
       const form = new FormData();
       form.append('image_file', new File([blob], 'frame.jpg', { type: 'image/jpeg' }));
+      if (participant?.id) form.append('pid', participant.id);
+      if (currentVideo?.id) form.append('video_id', currentVideo.id);
+      form.append('video_time_sec', String(Math.floor(videoTime || 0)));
       const res = await fetch(`${apiHost}/predict`, { method: 'POST', body: form });
       if (!res.ok) {
         setLastSendError(`${res.status} ${res.statusText}`);
