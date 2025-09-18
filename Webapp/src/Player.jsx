@@ -157,8 +157,8 @@ useEffect(() => {
   };
 
   // Handle SAM rating completion
-  const handleSAMComplete = (valenceRating, arousalRating) => {
-    setDebugInfo(`Rating completed: V${valenceRating}, A${arousalRating}`);
+  const handleSAMComplete = (valenceRating, arousalRating, freeEmotion) => {
+    setDebugInfo(`Rating completed: V${valenceRating}, A${arousalRating}, Free Emotion${freeEmotion}`);
 
     // Persist rating against current session
     try {
@@ -166,7 +166,8 @@ useEffect(() => {
         videoId: currentVideo?.id || '',
         videoTimeSec: Math.floor(videoTime || 0),
         valence: valenceRating,
-        arousal: arousalRating
+        arousal: arousalRating,
+        freeEmotion: freeEmotion
       });
     } catch (e) {
       console.error('recordRating failed:', e);

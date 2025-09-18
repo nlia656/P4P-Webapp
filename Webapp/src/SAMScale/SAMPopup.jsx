@@ -6,6 +6,7 @@ import arousalSAM from '../assets/SAMArousal.png';
 function SAMPopup({ open, onComplete, currentTime = 0 }) {
   const [valenceRating, setValenceRating] = useState(null);
   const [arousalRating, setArousalRating] = useState(null);
+  const [freeEmotion, setFreeEmotion] = useState(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,13 +35,19 @@ function SAMPopup({ open, onComplete, currentTime = 0 }) {
     setArousalRating(parseInt(value));
   };
 
+  const handleFreeEmotionChange = (value) => {
+    console.log('Free Emotion changed to:', value);
+    setFreeEmotion(value);
+  }
+
   const handleSubmit = () => {
-    console.log('Submit clicked with ratings:', { valence: valenceRating, arousal: arousalRating });
+    console.log('Submit clicked with ratings:', { valence: valenceRating, arousal: arousalRating, freeEmotion });
     if (valenceRating !== null && arousalRating !== null) {
-      onComplete(valenceRating, arousalRating);
+      onComplete(valenceRating, arousalRating, freeEmotion);
       // Reset ratings for next use
       setValenceRating(null);
       setArousalRating(null);
+      setFreeEmotion(null);
     } else {
       alert('Please select ratings for both valence and arousal scales.');
     }
@@ -177,6 +184,17 @@ function SAMPopup({ open, onComplete, currentTime = 0 }) {
                 <span>5</span>
               </label>
             </div>
+          </div>
+
+          <div className="free-emotion">
+            <label className="emotion-desc">
+              In one or two words, describe your current emotions:
+            </label>
+            <input 
+              type="text" 
+              className="free-field" 
+              // value="free-emotion"
+              onChange={(e) => handleFreeEmotionChange(e.target.value)}></input>
           </div>
         </div>
         
