@@ -58,10 +58,12 @@ function Player() {
   const links = location.state?.links || [];
   const participantId = location.state?.id || [];
   const participantIdInt = parseInt(participantId, 10);
+  const [videosWatched, setVideosWatched] = useState(0);
   const [videoIndex, setVideoIndex] = useState(participantIdInt);
   const playerRef = useRef(null);
   const [advanceAfterSAM, setAdvanceAfterSAM] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [endStudy, setEndStudy] = useState(false);
 
 useEffect(() => {
     if (!currentVideo && setCurrentVideo) {
@@ -69,6 +71,7 @@ useEffect(() => {
     }
   }, [currentVideo, setCurrentVideo, videoIndex]);
 
+  const navigate = useNavigate();
   // Reset the last 60s checkpoint whenever the video changes
   useEffect(() => {
     setLastRatingTime(0);
@@ -104,10 +107,8 @@ useEffect(() => {
   // Handle video end → open SAM, advance after rating
   const handleVideoEnd = () => {
     setDebugInfo('Video ended');
+    setVideosWatched(videosWatched+1);
     let nextIndex = videoIndex + 1;
-    if (nextIndex == participantIdInt){
-      navigate('/home');
-    } 
     if (nextIndex >= links.length){
       nextIndex = 0;
     }
@@ -115,6 +116,10 @@ useEffect(() => {
     console.log(videoIndex + "video index");
     setCurrentVideo(links[nextIndex]);
     handleLastSam();
+     if (videosWatched===links.length-1){
+      setAdvanceAfterSAM(true);
+      setEndStudy(true);
+     }
   };
 
   const handleLastSam = () => {
@@ -178,6 +183,9 @@ useEffect(() => {
 
     // If rating was triggered at the end of a video, advance to next clip
     if (advanceAfterSAM) {
+      if (endStudy){
+        navigate('/ending');
+      }
       let nextIndex = videoIndex + 1;
       if (nextIndex >= links.length) nextIndex = 0;
       setVideoIndex(nextIndex);

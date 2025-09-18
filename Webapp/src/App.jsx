@@ -4,6 +4,7 @@ import Landing from './Landing';
 import Home from './Home';
 import Admin from './Admin';
 import Player from './Player';
+import Ending from "./Ending";
 import './App.css';
 import WebcamOverlay from './components/WebcamOverlay';
 import { ToastContainer } from 'react-toastify';
@@ -23,6 +24,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/player" element={<Player />} />
+            <Route path="/ending" element={<Ending />} />
           </Routes>
         </div>
       </BrowserRouter>
