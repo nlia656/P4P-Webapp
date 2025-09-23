@@ -79,7 +79,12 @@ function WebcamOverlay() {
       if (!blob) return false;
       const form = new FormData();
       form.append('image_file', new File([blob], 'frame.jpg', { type: 'image/jpeg' }));
-      if (participant?.id) form.append('pid', participant.id);
+      // Use the user-entered participant ID (name from Home.jsx)
+      if (participant?.name) {
+        form.append('pid', participant.name);
+      } else if (participant?.id) {
+        form.append('pid', participant.id);
+      }
       if (currentVideo?.id) form.append('video_id', currentVideo.id);
       form.append('video_time_sec', String(Math.floor(videoTime || 0)));
       const res = await fetch(`${apiHost}/predict`, { method: 'POST', body: form });
